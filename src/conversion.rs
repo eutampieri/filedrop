@@ -11,6 +11,37 @@ pub enum Format {
     Ico,
 }
 
+impl From<String> for Format {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "jpeg" => Self::Jpeg,
+            "jpg" => Self::Jpeg,
+            "webp" => Self::Webp,
+            "gif" => Self::Gif,
+            "bmp" => Self::Bmp,
+            "tif" => Self::Tiff,
+            "tiff" => Self::Tiff,
+            "png" => Self::Png,
+            "ico" => Self::Ico,
+            _ => Self::Jpeg,
+        }
+    }
+}
+
+impl Format {
+    pub fn get_content_type(&self) -> &'static str {
+        match self {
+            Self::Jpeg => "image/jpeg",
+            Self::Webp => "image/webp",
+            Self::Gif => "image/gif",
+            Self::Bmp => "image/bitmap",
+            Self::Tiff => "image/tiff",
+            Self::Png => "image/png",
+            Self::Ico => "image/vnd.microsoft.icon",
+        }
+    }
+}
+
 pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let image = base64::decode(img).map_err(|_| "Cannot decode image from b64")?;
     if image.len() > 5_000_000 {
@@ -26,8 +57,14 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let mut output = Vec::<u8>::new();
     let farbfeld_encoder = image::farbfeld::FarbfeldEncoder::new(&mut output);
     let dim = decoded.dimensions();
+    let rgba16: Vec<u8> = decoded
+        .into_rgba()
+        .into_vec()
+        .into_iter()
+        .flat_map(|x| vec![0x00, x])
+        .collect();
     farbfeld_encoder
-        .encode(decoded.as_rgba8().unwrap(), dim.0, dim.1)
+        .encode(&rgba16, dim.0, dim.1)
         .map_err(|_| "Cannot encode in farbfeld")?;
     Ok(output)
 }
@@ -35,18 +72,23 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
 pub fn farbfeld_to_webp(farbfeld: &[u8]) -> Result<Vec<u8>, &'static str> {
     let decoder =
         image::farbfeld::FarbfeldDecoder::new(farbfeld).map_err(|_| "Cannot decode farbfeld")?;
-    let img_color_type = decoder.color_type();
     let dim = decoder.dimensions();
-    let mut img_data = Vec::<u8>::new();
+    let mut img_data = vec![0; decoder.total_bytes() as usize];
     decoder
         .read_image(&mut img_data)
         .map_err(|_| "Could not read farbfeld")?;
-    libwebp::WebPEncodeLosslessRGBA(&img_data, dim.0, dim.1, 8)
+    let rgb8: Vec<u8> = img_data
+        .into_iter()
+        .enumerate()
+        .filter(|x| (x.0) % 2 != 0)
+        .map(|x| x.1)
+        .collect();
+    libwebp::WebPEncodeLosslessRGBA(&rgb8, dim.0, dim.1, 8)
         .map_err(|_| "Cannot encode to WebP")
         .map(|x| Vec::from(&*x)) // TODO Fix this alloc
 }
 
-pub fn encode_img(webp: &[u8], format: Format) -> Result<Vec<u8>, &'static str> {
+pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str> {
     let (width, height, img_data) =
         libwebp::WebPDecodeRGBA(webp).map_err(|_| "Cannot decode WebP")?;
     let img_color_type = image::ColorType::Rgba8;

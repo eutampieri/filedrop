@@ -1,4 +1,4 @@
-fn hash_file(file: &[u8]) -> String {
+pub fn hash_file(file: &[u8]) -> String {
     "a".to_owned()
 }
 

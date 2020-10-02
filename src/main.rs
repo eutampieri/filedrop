@@ -1,15 +1,17 @@
-use iron::prelude::*;
-use router::Router;
+use actix_web::{App, HttpServer};
 
-mod convertion;
+mod conversion;
 mod file_encoding;
 mod routes;
 
-fn main() {
-    std::thread::spawn(|| {});
-    let mut router = Router::new();
-    router.post("/", routes::save_file, "upload");
-    router.get("/:fn", routes::get_file, "get");
-
-    Iron::new(router).http("127.0.0.1:2195").unwrap();
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| {
+        App::new()
+            .service(routes::get_file)
+            .service(routes::save_file)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }
