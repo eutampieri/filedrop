@@ -9,3 +9,6 @@ edition = "2018"
 [dependencies]
 iron = "0.6"
 router = "0.6"
+base64 = "0.13"
+infer = "0.2"
+image = "0.23"
