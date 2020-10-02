@@ -61,7 +61,7 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
     let dim = decoded.dimensions();
     if lossy {
-        libwebp::WebPEncodeRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0, 90)
+        libwebp::WebPEncodeRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0, 90f32)
             .map_err(|_| "Cannot encode to WebP")
             .map(|x| Vec::from(&*x))
     } else {
