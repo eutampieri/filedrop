@@ -28,7 +28,7 @@ pub async fn save_file(form: web::Form<Upload>) -> Result<String> {
     let image =
         conversion::decode_image(&form.img).map_err(|x| HttpResponse::BadRequest().body(x))?;
     let hash = file_encoding::hash_file(&image);
-    if !std::path::Path::new(&format!("pool/{}", hash)).exists() {
+    if !std::path::Path::new(&format!("pool/{}.webp", hash)).exists() {
         // Save file
         std::fs::write(format!("pool/{}.webp", hash), image)
             .map_err(|_| HttpResponse::InsufficientStorage())?;
