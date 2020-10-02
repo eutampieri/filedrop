@@ -50,14 +50,25 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let mime = infer::Infer::new()
         .get(&image)
         .ok_or("Cannot detect image type")?;
+    let lossy;
     if mime.mime.split("/").nth(0).unwrap() != "image" {
         return Err("The file is not an image");
+    } else if mime.mime.split("/").nth(0).unwrap() == "jpeg" {
+        lossy = true
+    } else {
+        lossy = false;
     }
     let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
     let dim = decoded.dimensions();
-    libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0)
-        .map_err(|_| "Cannot encode to WebP")
-        .map(|x| Vec::from(&*x)) // TODO Fix this alloc
+    if lossy {
+        libwebp::WebPEncodeRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0, 90)
+            .map_err(|_| "Cannot encode to WebP")
+            .map(|x| Vec::from(&*x))
+    } else {
+        libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0)
+            .map_err(|_| "Cannot encode to WebP")
+            .map(|x| Vec::from(&*x)) // TODO Fix this alloc
+    }
 }
 
 pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str> {
