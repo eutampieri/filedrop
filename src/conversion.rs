@@ -54,36 +54,8 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
         return Err("The file is not an image");
     }
     let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
-    let mut output = Vec::<u8>::new();
-    let farbfeld_encoder = image::farbfeld::FarbfeldEncoder::new(&mut output);
     let dim = decoded.dimensions();
-    let rgba16: Vec<u8> = decoded
-        .into_rgba()
-        .into_vec()
-        .into_iter()
-        .flat_map(|x| vec![0x00, x])
-        .collect();
-    farbfeld_encoder
-        .encode(&rgba16, dim.0, dim.1)
-        .map_err(|_| "Cannot encode in farbfeld")?;
-    Ok(output)
-}
-
-pub fn farbfeld_to_webp(farbfeld: &[u8]) -> Result<Vec<u8>, &'static str> {
-    let decoder =
-        image::farbfeld::FarbfeldDecoder::new(farbfeld).map_err(|_| "Cannot decode farbfeld")?;
-    let dim = decoder.dimensions();
-    let mut img_data = vec![0; decoder.total_bytes() as usize];
-    decoder
-        .read_image(&mut img_data)
-        .map_err(|_| "Could not read farbfeld")?;
-    let rgb8: Vec<u8> = img_data
-        .into_iter()
-        .enumerate()
-        .filter(|x| (x.0) % 2 != 0)
-        .map(|x| x.1)
-        .collect();
-    libwebp::WebPEncodeLosslessRGBA(&rgb8, dim.0, dim.1, 8)
+    libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba(), dim.0, dim.1, 8)
         .map_err(|_| "Cannot encode to WebP")
         .map(|x| Vec::from(&*x)) // TODO Fix this alloc
 }

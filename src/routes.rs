@@ -30,9 +30,7 @@ pub async fn save_file(form: web::Form<Upload>) -> Result<String> {
     let hash = file_encoding::hash_file(&image);
     if !std::path::Path::new(&format!("pool/{}", hash)).exists() {
         // Save file
-        let webp = conversion::farbfeld_to_webp(&image)
-            .map_err(|x| HttpResponse::InternalServerError().body(x))?;
-        std::fs::write(format!("pool/{}.webp", hash), webp)
+        std::fs::write(format!("pool/{}.webp", hash), image)
             .map_err(|_| HttpResponse::InsufficientStorage())?;
     }
     Ok(format!("https://i.shlnk.eu/{}", hash))
