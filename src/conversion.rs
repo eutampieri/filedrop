@@ -1,6 +1,3 @@
-use image::{GenericImageView, ImageDecoder};
-use std::io::Cursor;
-
 pub enum Format {
     Jpeg,
     Webp,
@@ -40,9 +37,20 @@ impl Format {
             Self::Ico => "image/vnd.microsoft.icon",
         }
     }
+    pub fn get_ext(&self) -> &'static str {
+        match self {
+            Self::Jpeg => "jpeg",
+            Self::Webp => "webp",
+            Self::Gif => "gif",
+            Self::Bmp => "bmp",
+            Self::Tiff => "tiff",
+            Self::Png => "png",
+            Self::Ico => "ico",
+        }
+    }
 }
 
-pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
+pub fn decode_image(img: &str) -> Result<(Vec<u8>, Format), &'static str> {
     let image = base64::decode(img).map_err(|_| "Cannot decode image from b64")?;
     if image.len() > 5_000_000 {
         return Err("File is too big");
@@ -53,68 +61,8 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     if mime.mime.split("/").nth(0).unwrap() != "image" {
         return Err("The file is not an image");
     }
-    let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
-    let dim = decoded.dimensions();
-    libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba(), dim.0, dim.1, 8)
-        .map_err(|_| "Cannot encode to WebP")
-        .map(|x| Vec::from(&*x)) // TODO Fix this alloc
-}
-
-pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str> {
-    let (width, height, img_data) =
-        libwebp::WebPDecodeRGBA(webp).map_err(|_| "Cannot decode WebP")?;
-    let img_color_type = image::ColorType::Rgba8;
-    let dim = (width, height);
-    match format {
-        Format::Bmp => {
-            let mut output = Vec::<u8>::new();
-            let mut encoder = image::bmp::BmpEncoder::new(&mut output);
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            Ok(output)
-        }
-        Format::Gif => {
-            let mut output = Vec::<u8>::new();
-            let mut encoder = image::gif::GifEncoder::new(&mut output);
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            drop(encoder);
-            Ok(output)
-        }
-        Format::Ico => {
-            let mut output = Vec::<u8>::new();
-            let encoder = image::ico::IcoEncoder::new(&mut output);
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            Ok(output)
-        }
-        Format::Jpeg => {
-            let mut output = Vec::<u8>::new();
-            let mut encoder = image::jpeg::JpegEncoder::new(&mut output);
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            Ok(output)
-        }
-        Format::Png => {
-            let mut output = Vec::<u8>::new();
-            let encoder = image::png::PngEncoder::new(&mut output);
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            Ok(output)
-        }
-        Format::Tiff => {
-            let mut output = Vec::<u8>::new();
-            let encoder = image::tiff::TiffEncoder::new(Cursor::new(&mut output));
-            encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
-                .map_err(|_| "Cannot encode image")?;
-            Ok(output)
-        }
-        Format::Webp => Ok(Vec::from(webp)),
-    }
+    Ok((
+        image,
+        Format::from(mime.mime.split("/").nth(1).unwrap().to_owned()),
+    ))
 }
