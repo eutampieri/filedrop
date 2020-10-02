@@ -12,3 +12,4 @@ router = "0.6"
 base64 = "0.13"
 infer = "0.2"
 image = "0.23"
+libwebp = { version = "0.1.2", features = ["1_1", "static"] }
