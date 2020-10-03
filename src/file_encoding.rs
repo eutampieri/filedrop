@@ -23,9 +23,6 @@ impl FileHasher {
         }
         res
     }
-    pub fn new() -> Self {
-        FileHasher::default()
-    }
     pub fn with_cnt(cnt: usize) -> Self {
         FileHasher {
             hm: HashMap::new(),
