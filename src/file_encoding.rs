@@ -30,6 +30,14 @@ mod tests {
         );
     }
     #[test]
+    fn test_different_inputs() {
+        let mut hasher = FileHasher::default();
+        assert!(
+            hasher.hash_file(&[0, 7, 8, 2, 6, 4, 59, 38, 78, 159, 48])
+                != hasher.hash_file(&[0, 7, 8, 2, 6, 4, 59, 38])
+        );
+    }
+    #[test]
     fn test_allowed_chars() {
         let mut hasher = FileHasher::default();
         assert!(hasher
