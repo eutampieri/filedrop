@@ -44,7 +44,7 @@ impl Format {
 
 pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let image = base64::decode(img).map_err(|_| "Cannot decode image from b64")?;
-    if image.len() > 5_000_000 {
+    if image.len() > *super::MAX_FILE_SIZE {
         return Err("File is too big");
     }
     let mime = infer::Infer::new()
