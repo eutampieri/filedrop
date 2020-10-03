@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn test_same_output() {
-        let hasher = FileHasher::default();
+        let mut hasher = FileHasher::default();
         assert_eq!(
             hasher.hash_file(&[0, 7, 8, 2, 6, 4, 59, 38]),
             hasher.hash_file(&[0, 7, 8, 2, 6, 4, 59, 38])
@@ -21,7 +21,7 @@ mod tests {
 
     #[test]
     fn test_const_len() {
-        let hasher = FileHasher::default();
+        let mut hasher = FileHasher::default();
         assert_eq!(
             hasher
                 .hash_file(&[0, 7, 8, 2, 6, 4, 59, 38, 78, 159, 48])
@@ -31,7 +31,7 @@ mod tests {
     }
     #[test]
     fn test_allowed_chars() {
-        let hasher = FileHasher::default();
+        let mut hasher = FileHasher::default();
         assert!(hasher
             .hash_file(&[0, 7, 8, 2, 6, 4, 59, 38, 78, 159, 48])
             .as_str()
@@ -41,7 +41,7 @@ mod tests {
     }
     #[test]
     fn test_length() {
-        let hasher = FileHasher::default();
+        let mut hasher = FileHasher::default();
         let len = hasher
             .hash_file(&[0, 7, 8, 2, 6, 4, 59, 38, 78, 159, 48])
             .len();
