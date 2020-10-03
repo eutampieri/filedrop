@@ -626,6 +626,7 @@ dependencies = [
  "base64 0.13.0",
  "image",
  "infer",
+ "lazy_static",
  "libwebp",
  "serde",
 ]

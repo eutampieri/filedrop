@@ -13,3 +13,4 @@ infer = "0.2"
 image = "0.23"
 libwebp = { version = "0.1.2", features = ["1_1", "static"] }
 serde = {version = "*", features=["derive"]}
+lazy_static = "1.4"
