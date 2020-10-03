@@ -40,6 +40,12 @@ async fn main() -> std::io::Result<()> {
                 }
             }
 
+            while pool.len() >= (file_encoding::MOD as f32 * 0.9) as usize {
+                if let Some(to_del) = pool.pop() {
+                    std::fs::remove_file(to_del.0).ok();
+                }
+            }
+
             let min_allowed_date = (std::time::SystemTime::now()
                 - std::time::Duration::from_secs(24 * 3600))
             .duration_since(std::time::UNIX_EPOCH)

@@ -14,6 +14,9 @@ lazy_static! {
 
 #[get("/{name}.{ext}")]
 pub async fn get_file(web::Path((name, ext)): web::Path<(String, String)>) -> Result<HttpResponse> {
+    if super::utils::get_unsorted_pool().unwrap_or(vec![]).len() >= super::file_encoding::MOD {
+        return Ok(HttpResponse::InsufficientStorage().finish());
+    }
     let fmt: conversion::Format = ext.into();
     if !std::path::Path::new(&format!("pool/{}.webp", name)).exists() {
         Ok(HttpResponse::NotFound().finish())

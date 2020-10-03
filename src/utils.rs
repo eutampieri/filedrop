@@ -1,6 +1,6 @@
 pub type Pool = Vec<(String, u64, u64)>;
 
-fn get_unsorted_pool() -> Result<Pool, std::io::Error> {
+pub fn get_unsorted_pool() -> Result<Pool, std::io::Error> {
     Ok(std::fs::read_dir("pool/")?
         .filter_map(|x| {
             x.ok().map(|y| {
