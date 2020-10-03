@@ -1,10 +1,15 @@
 use super::{conversion, file_encoding};
 use actix_web::{get, post, web, HttpResponse, Result};
+use lazy_static::lazy_static;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Upload {
     img: String,
+}
+
+lazy_static! {
+    static ref HASHER: std::sync::Mutex<file_encoding::FileHasher> = std::sync::Mutex::default();
 }
 
 #[get("/{name}.{ext}")]
@@ -27,7 +32,10 @@ pub async fn get_file(web::Path((name, ext)): web::Path<(String, String)>) -> Re
 pub async fn save_file(form: web::Form<Upload>) -> Result<String> {
     let image =
         conversion::decode_image(&form.img).map_err(|x| HttpResponse::BadRequest().body(x))?;
-    let hash = file_encoding::hash_file(&image);
+    let hash = HASHER
+        .lock()
+        .map_err(|_| HttpResponse::InternalServerError())?
+        .hash_file(&image);
     if !std::path::Path::new(&format!("pool/{}.webp", hash)).exists() {
         // Save file
         std::fs::write(format!("pool/{}.webp", hash), image)

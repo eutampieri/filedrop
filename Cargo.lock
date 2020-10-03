@@ -670,6 +670,7 @@ dependencies = [
  "blake3",
  "image",
  "infer",
+ "lazy_static",
  "libwebp",
  "serde",
 ]
