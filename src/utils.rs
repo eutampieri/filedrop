@@ -5,7 +5,7 @@ fn get_unsorted_pool() -> Result<Pool, std::io::Error> {
         .filter_map(|x| {
             x.ok().map(|y| {
                 (
-                    y.file_name().into_string().unwrap_or_default(),
+                    "pool/".to_owned() + &y.file_name().into_string().unwrap_or_default(),
                     y.metadata().ok().map(|z| z.len()).unwrap_or_default(),
                     y.metadata()
                         .ok()
