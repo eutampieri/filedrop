@@ -29,7 +29,7 @@ pub async fn get_file(web::Path((name, ext)): web::Path<(String, String)>) -> Re
 }
 
 #[post("/")]
-pub async fn save_file(form: web::Form<Upload>) -> Result<String> {
+pub async fn save_file(form: web::Form<Upload>) -> Result<HttpResponse> {
     if super::utils::get_unsorted_pool().unwrap_or(vec![]).len() >= super::file_encoding::MOD {
         return Ok(HttpResponse::InsufficientStorage().finish());
     }
@@ -44,5 +44,5 @@ pub async fn save_file(form: web::Form<Upload>) -> Result<String> {
         std::fs::write(format!("pool/{}.webp", hash), image)
             .map_err(|_| HttpResponse::InsufficientStorage())?;
     }
-    Ok(format!("https://i.shlnk.eu/{}", hash))
+    Ok(HttpResponse::Ok().body(format!("https://i.shlnk.eu/{}", hash)))
 }
