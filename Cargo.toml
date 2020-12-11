@@ -9,9 +9,10 @@ edition = "2018"
 [dependencies]
 actix-web = "3"
 base64 = "0.13"
-infer = "0.2"
+infer = "0.3"
 image = "0.23"
 libwebp = { version = "0.1.2", features = ["1_1", "static"] }
 serde = {version = "*", features=["derive"]}
 lazy_static = "1.4"
 blake3 = "0.3.7"
+libheif-rs = "0.11"

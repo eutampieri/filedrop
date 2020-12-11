@@ -9,6 +9,7 @@ pub enum Format {
     Tiff,
     Png,
     Ico,
+    Heic,
 }
 
 impl From<String> for Format {
@@ -23,6 +24,8 @@ impl From<String> for Format {
             "tiff" => Self::Tiff,
             "png" => Self::Png,
             "ico" => Self::Ico,
+            "heic" => Self::Heic,
+            "heif" => Self::Heic,
             _ => Self::Jpeg,
         }
     }
@@ -38,6 +41,7 @@ impl Format {
             Self::Tiff => "image/tiff",
             Self::Png => "image/png",
             Self::Ico => "image/vnd.microsoft.icon",
+            Self::Heic => "image/heic",
         }
     }
 }
@@ -47,13 +51,13 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     if image.len() as u64 > *super::MAX_FILE_SIZE {
         return Err("File is too big");
     }
-    let mime = infer::Infer::new()
-        .get(&image)
+    let mime = infer::get(&image)
+        .map(|x| x.mime_type())
         .ok_or("Cannot detect image type")?;
     let lossy;
-    if mime.mime.split("/").nth(0).unwrap() != "image" {
+    if mime.split("/").nth(0).unwrap() != "image" {
         return Err("The file is not an image");
-    } else if mime.mime.split("/").nth(0).unwrap() == "jpeg" {
+    } else if mime.split("/").nth(0).unwrap() == "jpeg" {
         lossy = true
     } else {
         lossy = false;
@@ -127,5 +131,8 @@ pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str>
             Ok(output)
         }
         Format::Webp => Ok(Vec::from(webp)),
+        Format::Heic => {
+            Err("Unimplemented")
+        }
     }
 }
