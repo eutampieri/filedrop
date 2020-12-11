@@ -132,7 +132,63 @@ pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str>
         }
         Format::Webp => Ok(Vec::from(webp)),
         Format::Heic => {
-            Err("Unimplemented")
+            let mut image = libheif_rs::Image::new(
+                width,
+                height,
+                libheif_rs::ColorSpace::Rgb(libheif_rs::RgbChroma::C444),
+            )
+            .map_err(|_| "Cannot encode image")?;
+
+            image
+                .create_plane(libheif_rs::Channel::R, width, height, 8)
+                .map_err(|_| "Cannot encode image")?;
+            image
+                .create_plane(libheif_rs::Channel::G, width, height, 8)
+                .map_err(|_| "Cannot encode image")?;
+            image
+                .create_plane(libheif_rs::Channel::B, width, height, 8)
+                .map_err(|_| "Cannot encode image")?;
+            image
+                .create_plane(libheif_rs::Channel::Alpha, width, height, 8)
+                .map_err(|_| "Cannot encode image")?;
+
+            let planes = image.planes_mut();
+            let plane_r = planes.r.unwrap();
+            let stride = dbg!(plane_r.stride);
+
+            let data_r = plane_r.data;
+            let data_g = planes.g.unwrap().data;
+            let data_b = planes.b.unwrap().data;
+            let data_a = planes.a.unwrap().data;
+
+            // Fill data of planes by some "pixels"
+            for y in 0..height {
+                let mut row_start = stride * y as usize;
+                let mut row_start_webp = (4 * width * y) as usize;
+                for _ in 0..width {
+                    data_r[row_start] = img_data[row_start_webp];
+                    data_g[row_start] = img_data[row_start_webp + 1];
+                    data_b[row_start] = img_data[row_start_webp + 2];
+                    data_a[row_start] = img_data[row_start_webp + 3];
+                    row_start += 1;
+                    row_start_webp += 4;
+                }
+            }
+
+            // Encode image and save it into file.
+            let mut context = libheif_rs::HeifContext::new().map_err(|_| "Cannot encode image")?;
+            let mut encoder = context
+                .encoder_for_format(libheif_rs::CompressionFormat::Hevc)
+                .map_err(|_| "Cannot encode image")?;
+            encoder
+                .set_quality(libheif_rs::EncoderQuality::LossLess)
+                .map_err(|_| "Cannot encode image")?;
+            context
+                .encode_image(&image, &mut encoder, None)
+                .map_err(|_| "Cannot encode image")?;
+            Ok(context
+                .write_to_bytes()
+                .map_err(|_| "Cannot encode image")?)
         }
     }
 }

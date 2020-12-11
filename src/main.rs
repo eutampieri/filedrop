@@ -60,8 +60,8 @@ async fn main() -> std::io::Result<()> {
                     }
                 }
             }
-            std::thread::sleep(std::time::Duration::from_secs(300));
         }
+        std::thread::sleep(std::time::Duration::from_secs(300));
     });
     HttpServer::new(|| {
         App::new()
