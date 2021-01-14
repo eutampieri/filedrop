@@ -65,11 +65,11 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
     let dim = decoded.dimensions();
     if lossy {
-        libwebp::WebPEncodeRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0, 90f32)
+        libwebp::WebPEncodeRGBA(&decoded.into_rgba8(), dim.0, dim.1, 4 * dim.0, 90f32)
             .map_err(|_| "Cannot encode to WebP")
             .map(|x| Vec::from(&*x))
     } else {
-        libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba(), dim.0, dim.1, 4 * dim.0)
+        libwebp::WebPEncodeLosslessRGBA(&decoded.into_rgba8(), dim.0, dim.1, 4 * dim.0)
             .map_err(|_| "Cannot encode to WebP")
             .map(|x| Vec::from(&*x)) // TODO Fix this alloc
     }
@@ -99,10 +99,34 @@ pub fn encode_img(webp: &[u8], format: &Format) -> Result<Vec<u8>, &'static str>
             Ok(output)
         }
         Format::Ico => {
+            let mut original_image =
+                image::RgbaImage::from_raw(width, height, img_data.into_iter().cloned().collect())
+                    .ok_or("Cannot parse image")?;
+
+            let (nw, nh);
+            if width > 256 || height > 256 {
+                if width > height {
+                    nw = 256;
+                    nh = 256 * height / width;
+                } else {
+                    nh = 256;
+                    nw = 256 * width / height;
+                }
+                original_image = image::imageops::resize(
+                    &original_image,
+                    nw,
+                    nh,
+                    image::imageops::FilterType::Lanczos3,
+                );
+            } else {
+                nw = width;
+                nh = height;
+            }
+
             let mut output = Vec::<u8>::new();
             let encoder = image::ico::IcoEncoder::new(&mut output);
             encoder
-                .encode(&img_data, dim.0, dim.1, img_color_type)
+                .encode(&original_image, nw, nh, img_color_type)
                 .map_err(|_| "Cannot encode image")?;
             Ok(output)
         }
