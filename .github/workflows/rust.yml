@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: sudo apt install 'libheif*' && cargo build --verbose
+      run: sudo apt install 'libheif*' -y && cargo build --verbose
     - name: Run tests
-      run: sudo apt install 'libheif*' && cargo test --verbose
+      run: sudo apt install 'libheif*' -y && cargo test --verbose
