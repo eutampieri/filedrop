@@ -54,14 +54,13 @@ pub fn decode_image(img: &str) -> Result<Vec<u8>, &'static str> {
     let mime = infer::get(&image)
         .map(|x| x.mime_type())
         .ok_or("Cannot detect image type")?;
-    let lossy;
-    if mime.split("/").nth(0).unwrap() != "image" {
-        return Err("The file is not an image");
+    let lossy =  if mime.split("/").nth(0).unwrap() != "image" {
+        Err("The file is not an image")
     } else if mime.split("/").nth(0).unwrap() == "jpeg" {
-        lossy = true
+        Ok(true)
     } else {
-        lossy = false;
-    }
+        Ok(false)
+    }?;
     let decoded = image::load_from_memory(&image).map_err(|_| "Cannot decode the image")?;
     let dim = decoded.dimensions();
     if lossy {
