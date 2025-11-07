@@ -16,3 +16,4 @@ serde = {version = "*", features=["derive"]}
 lazy_static = "1.4"
 blake3 = "1"
 libheif-rs = "0.15"
+pdfium = "0.9.5"
